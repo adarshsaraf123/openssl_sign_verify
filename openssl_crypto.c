@@ -12,18 +12,25 @@ const char *data_file = "data.txt";
 const char *signature_file = "signature.bin";
 
 int main() {
-	BIO *stdout_bio = BIO_new_fp(stdout, BIO_NOCLOSE);
+	BIO *stdout_bio;
+	FILE *fp;
+	EVP_PKEY *priv_key, *pub_key;
+	EVP_MD_CTX *mdctx;
+	char *msg, *signature, *cli_signature, *generated_signature;
+	size_t msglen, siglen, cli_siglen, generated_siglen;
+
+	stdout_bio = BIO_new_fp(stdout, BIO_NOCLOSE);
 	
 	// initialize openssl
 	OpenSSL_add_all_algorithms();
 
 	// load the private key
-	FILE *fp = fopen(private_key_file,"r");
+	fp = fopen(private_key_file,"r");
 	if (fp == NULL) {
 		perror("private key file opening failed");
 		exit(1);
 	}
-	EVP_PKEY *priv_key = PEM_read_PrivateKey(fp, NULL, NULL, (char *) "");
+	priv_key = PEM_read_PrivateKey(fp, NULL, NULL, (char *) "");
 	fclose(fp);
 	if (priv_key == NULL) {
 		ERR_print_errors_fp(stderr);
@@ -36,7 +43,7 @@ int main() {
 		perror("public key file opening failed");
 		exit(1);
 	}
-	EVP_PKEY *pub_key = PEM_read_PUBKEY(fp, NULL, NULL, (char *) "");
+	pub_key = PEM_read_PUBKEY(fp, NULL, NULL, (char *) "");
 	fclose(fp);
 	if (pub_key == NULL) {
 		ERR_print_errors_fp(stderr);
@@ -52,7 +59,7 @@ int main() {
 	// VERIFY SIGNATURE
 	
 	// 1. Create and initialize the context for the message digest
-	EVP_MD_CTX *mdctx = NULL;
+	mdctx = NULL;
 	if( ! (mdctx = EVP_MD_CTX_create()) ) {
 		ERR_print_errors_fp(stderr);
 		exit(1);
@@ -65,9 +72,9 @@ int main() {
 		exit(1);
 	}
 	fseek(fp, 0, SEEK_END);
-	size_t msglen = ftell(fp);
+	msglen = ftell(fp);
 	fseek(fp, 0, SEEK_SET);
-	char * msg = (char *)malloc(msglen + 1); // +1 for the trailing '\0' to be added
+	msg = (char *)malloc(msglen + 1); // +1 for the trailing '\0' to be added
 	fread(msg, msglen, 1, fp);
 	msg[msglen] = '\0';	
 	printf("msg: %s\n", msg);
@@ -80,15 +87,14 @@ int main() {
 		exit(1);
 	}
 	fseek(fp, 0, SEEK_END);
-	size_t cli_siglen = ftell(fp);
+	cli_siglen = ftell(fp);
 	fseek(fp, 0, SEEK_SET);
-	char * cli_signature = (char *)malloc(cli_siglen + 1); // +1 for the trailing '\0' to be added
+	cli_signature = (char *)malloc(cli_siglen + 1); // +1 for the trailing '\0' to be added
 	fread(cli_signature, cli_siglen, 1, fp);
 	cli_signature[cli_siglen] = '\0';	
 	fclose(fp);
 
 	// 4. Sign the message
-	size_t generated_siglen;
 	// 4a. Init the signing context with sha256 as the digest function
 	if( EVP_DigestSignInit( mdctx, NULL, EVP_sha256(), NULL, priv_key ) != 1 ) {
 		ERR_print_errors_fp(stderr);
@@ -104,22 +110,22 @@ int main() {
 		ERR_print_errors_fp(stderr);
 		exit(1);
 	}
-	char * generated_sign = (char *) malloc(generated_siglen);
+	generated_signature = (char *) malloc(generated_siglen);
 	// 4d. Finalize the signing context with the signature
-	if( EVP_DigestSignFinal( mdctx, generated_sign, &generated_siglen) != 1 ) {
+	if( EVP_DigestSignFinal( mdctx, generated_signature, &generated_siglen) != 1 ) {
 		ERR_print_errors_fp(stderr);
 		exit(1);
 	}
 	// 4e. Compare the generated signature with the cli signature
-	if(strcmp(cli_signature, generated_sign) == 0) {
+	if(strcmp(cli_signature, generated_signature) == 0) {
 		printf("generated signature matches cli signature\n");
 	}
 	else
 		printf("generated signature does not match cli signature\n");
 
 	// 5. Verify the signature
-	char *signature = cli_signature;
-	size_t siglen = cli_siglen;
+	signature = cli_signature;
+	siglen = cli_siglen;
 	// 5a. Init the signature verification context with sha256 as the digest function
 	if( EVP_DigestVerifyInit( mdctx, NULL, EVP_sha256(), NULL, pub_key ) != 1 ) {
 		ERR_print_errors_fp(stderr);
