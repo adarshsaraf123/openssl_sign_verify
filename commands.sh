@@ -1,5 +1,9 @@
 # to generate the private key
 # TODO: explore the particular curve to be used; for now this too seems to be okay
+# There seems to be only two good choices of curves:
+#	1. prime256v1
+#	2. secp384r1
+# openssl ecparam -name secp384r1 -genkey -param_enc explicit -out private_key.pem
 openssl ecparam -name prime256v1 -genkey -param_enc explicit -out private_key.pem
 
 # encrypt the generated private key; there does not seem to be a built-in option 
