@@ -14,14 +14,15 @@ const char *data_file = "data.txt";
 const char *signature_file = "signature.bin";
 
 int read_text_file_to_string(char **str, const char *filename);
-int read_binary_file_to_string(char **str, size_t *length, const char *filename);
-int sign_message(const char *msg, char **signature, size_t *slen, EVP_PKEY *priv_key);
-int verify_signature(const char *msg, const char *signature, const size_t slen, EVP_PKEY *pub_key);
+int read_binary_file_to_string(unsigned char **str, size_t *length, const char *filename);
+int sign_message(const char *msg, unsigned char **signature, size_t *slen, EVP_PKEY *priv_key);
+int verify_signature(const char *msg, const unsigned char *signature, const size_t slen, EVP_PKEY *pub_key);
 
 int main() {
 	FILE *fp;
 	EVP_PKEY *priv_key, *pub_key;
-	char *msg, *signature, *cli_signature, *generated_signature;
+	char *msg;
+	unsigned char *signature, *cli_signature, *generated_signature;
 	size_t msglen, siglen, cli_siglen, generated_siglen;
 
 	// initialize openssl
@@ -144,7 +145,7 @@ int read_text_file_to_string(char **str, const char *filename) {
  *		not work and the length variable should be used
  * Returns 1 on success and 0 on failure
  */
-int read_binary_file_to_string(char **str, size_t *length, const char *filename) {
+int read_binary_file_to_string(unsigned char **str, size_t *length, const char *filename) {
 	FILE *fp;
 	
 	// open the file
@@ -174,7 +175,7 @@ int read_binary_file_to_string(char **str, size_t *length, const char *filename)
  * Return 1 on success and 0 on failure
  *  Upon failure, print the error encountered using the openssl ERR_ functions
  */
-int sign_message(const char *msg, char **signature, size_t *slen, EVP_PKEY *priv_key) {
+int sign_message(const char *msg, unsigned char **signature, size_t *slen, EVP_PKEY *priv_key) {
 	EVP_MD_CTX *mdctx;
 	size_t msglen;
 
@@ -216,7 +217,7 @@ int sign_message(const char *msg, char **signature, size_t *slen, EVP_PKEY *priv
  * Return 1 on success and 0 on failure
  *  Upon failure, print the error encountered using the openssl ERR_ functions
  */
-int verify_signature(const char *msg, const char *signature, const size_t slen, EVP_PKEY *pub_key) {
+int verify_signature(const char *msg, const unsigned char *signature, const size_t slen, EVP_PKEY *pub_key) {
 	EVP_MD_CTX *mdctx;
 	size_t msglen;
 
