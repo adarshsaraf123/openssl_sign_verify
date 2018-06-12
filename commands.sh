@@ -3,8 +3,13 @@
 # There seems to be only two good choices of curves:
 #	1. prime256v1
 #	2. secp384r1
+
 # openssl ecparam -name secp384r1 -genkey -param_enc explicit -out private_key.pem
-openssl ecparam -name prime256v1 -genkey -param_enc explicit -out private_key.pem
+
+# NOTE: -param_enc explicit must not be used as specified in the RFC:
+# 		https://tools.ietf.org/html/rfc5480#section-2.1.1
+# 	Additionally, it is not supported in golang as well.
+openssl ecparam -name prime256v1 -genkey -out private_key.pem
 
 # encrypt the generated private key; there does not seem to be a built-in option 
 #	for the same in ecparam
