@@ -2,10 +2,11 @@ package main
 
 import (
 	"crypto"
-	"crypto/x509"
 	_ "crypto/sha256"
+	"crypto/x509"
 	// _ "crypto/ecdsa"
 	"crypto/rand"
+	"encoding/base64"
 	"encoding/pem"
 	"fmt"
 	"io/ioutil"
@@ -43,4 +44,6 @@ func main() {
 	fmt.Print(signature)
 	err = ioutil.WriteFile("signature.bin", signature, 0666)
 	panicOnError(err)
+	base64Signature := []byte(base64.StdEncoding.EncodeToString(signature))
+	err = ioutil.WriteFile("signature.txt", base64Signature, 0666)
 }
