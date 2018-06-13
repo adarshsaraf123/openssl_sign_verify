@@ -11,7 +11,7 @@ import (
 	"io/ioutil"
 )
 
-func panic_on_error(err error) {
+func panicOnError(err error) {
 	if err != nil {
 		panic(fmt.Sprintf("%v", err))
 	}
@@ -19,7 +19,7 @@ func panic_on_error(err error) {
 
 func main() {
 	keyPemBytes, err := ioutil.ReadFile("private_key.pem")
-	panic_on_error(err)
+	panicOnError(err)
 	// first pem block is the ec parameters
 	pemBlock, remainingBytes := pem.Decode([]byte(keyPemBytes))
 	// this block is the actual private key
@@ -27,7 +27,7 @@ func main() {
 	fmt.Println(pemBlock.Type, pemBlock.Headers, pemBlock.Bytes)
 	// fmt.Print(pemBlock)
 	privateKey, err := x509.ParseECPrivateKey(pemBlock.Bytes)
-	panic_on_error(err)
+	panicOnError(err)
 	fmt.Print(privateKey)
 
 	// obtain the digest
@@ -42,5 +42,5 @@ func main() {
 
 	fmt.Print(signature)
 	err = ioutil.WriteFile("signature.bin", signature, 0666)
-	panic_on_error(err)
+	panicOnError(err)
 }
